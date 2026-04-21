@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { journal, sleep, workload } = body;
 
-    // ✅ VALIDASI FIX
     if (!journal || sleep === undefined || !workload) {
       return NextResponse.json(
         { status: 'error', message: 'Input tidak lengkap' },
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ VALIDASI RANGE
+    // VALIDASI RANGE
     if (sleep < 0 || sleep > 24) {
       return NextResponse.json(
         { status: 'error', message: 'Sleep harus 0 - 24 jam' },
@@ -31,10 +30,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ LOGIC LEBIH MASUK AKAL
     let risk = 'low';
     let score = 30;
 
+    //AI SEMENTARAAA
     if (sleep < 5 && workload === 'high') {
       risk = 'high';
       score = 90;
@@ -43,7 +42,6 @@ export async function POST(req: Request) {
       score = 65;
     }
 
-    // workload adjustment
     if (workload === 'high') score += 10;
     else if (workload === 'medium') score += 5;
 
