@@ -1,65 +1,88 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+export default function Dashboard() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="flex min-h-screen bg-[#0f0f14] text-white">
+      
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-[#18181f] p-6 border-r border-gray-800">
+        <h1 className="text-2xl font-bold text-purple-400 mb-10">
+          tenang.in
+        </h1>
+
+        <nav className="space-y-4 text-gray-400">
+          <p className="text-purple-400 font-semibold">Dashboard</p>
+          <p className="hover:text-purple-400 cursor-pointer">Check-in</p>
+          <p className="hover:text-purple-400 cursor-pointer">History</p>
+        </nav>
+      </aside>
+
+      {/* MAIN */}
+      <section className="flex-1 p-8">
+        
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold">Halo, Tiwi 👋</h2>
+          <div className="bg-[#1f1f27] px-4 py-2 rounded-xl text-sm border border-gray-800">
+            Hari ini
+          </div>
+        </div>
+
+        {/* STATUS CARDS */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="bg-[#1a1a22] p-5 rounded-2xl border border-gray-800">
+            <p className="text-gray-400">Mood Terakhir</p>
+            <h3 className="text-2xl font-bold mt-2">😊 Baik</h3>
+          </div>
+
+          <div className="bg-[#1a1a22] p-5 rounded-2xl border border-gray-800">
+            <p className="text-gray-400">Risiko Burnout</p>
+            <h3 className="text-2xl font-bold mt-2 text-purple-400">
+              LOW
+            </h3>
+          </div>
+
+          <div className="bg-[#1a1a22] p-5 rounded-2xl border border-gray-800">
+            <p className="text-gray-400">Streak</p>
+            <h3 className="text-2xl font-bold mt-2">5 hari 🔥</h3>
+          </div>
+        </div>
+
+        {/* QUICK ACTION */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          
+          {/* ✅ FIX DI SINI */}
+          <Link
+            href="/checkin"
+            className="bg-purple-600 p-6 rounded-2xl hover:bg-purple-700 transition text-center block"
+          >
+            ➕ Check-in Hari Ini
+          </Link>
+
+          <button className="bg-[#1a1a22] p-6 rounded-2xl border border-gray-800 hover:border-purple-500 transition">
+            📖 Tulis Jurnal
+          </button>
+        </div>
+
+        {/* AI INSIGHT */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-2xl mb-8">
+          <h3 className="font-semibold mb-2">Insight AI</h3>
+          <p className="text-sm opacity-90">
+            Kamu terlihat cukup stabil minggu ini. Pertahankan kebiasaan baikmu 👍
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* HISTORY */}
+        <div className="bg-[#1a1a22] p-6 rounded-2xl border border-gray-800">
+          <h3 className="font-semibold mb-4">Riwayat Terakhir</h3>
+          <ul className="space-y-2 text-sm text-gray-400">
+            <li>✔ Check-in berhasil</li>
+            <li>✔ Mood diperbarui</li>
+            <li>✔ Jurnal ditambahkan</li>
+          </ul>
         </div>
-      </main>
-    </div>
+
+      </section>
+    </main>
   );
 }

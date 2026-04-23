@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { history } from '@/lib/store';
 
-// sementara (nanti ganti DB)
-let history: any[] = [];
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return NextResponse.json({
@@ -22,7 +23,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // VALIDASI RANGE
     if (sleep < 0 || sleep > 24) {
       return NextResponse.json(
         { status: 'error', message: 'Sleep harus 0 - 24 jam' },
@@ -33,7 +33,6 @@ export async function POST(req: Request) {
     let risk = 'low';
     let score = 30;
 
-    //AI SEMENTARAAA
     if (sleep < 5 && workload === 'high') {
       risk = 'high';
       score = 90;
@@ -46,7 +45,7 @@ export async function POST(req: Request) {
     else if (workload === 'medium') score += 5;
 
     const newData = {
-      id: Date.now(),
+      id: Date.now().toString(),
       journal,
       sleep,
       workload,
