@@ -3,9 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+type Workload =
+  | "very_low"
+  | "low"
+  | "medium"
+  | "high"
+  | "very_high";
+
+type Mood =
+  | "sad"
+  | "bad"
+  | "neutral"
+  | "good"
+  | "excellent";
+
 export default function CheckinPage() {
 
   const router = useRouter();
+
+  // =========================
+  // STATE
+  // =========================
 
   const [journal, setJournal] =
     useState("");
@@ -14,13 +32,17 @@ export default function CheckinPage() {
     useState(6);
 
   const [workload, setWorkload] =
-    useState("medium");
+    useState<Workload>("medium");
 
   const [mood, setMood] =
-    useState("neutral");
+    useState<Mood>("neutral");
 
   const [loading, setLoading] =
     useState(false);
+
+  // =========================
+  // SUBMIT
+  // =========================
 
   const handleSubmit = async (
     e: React.FormEvent
@@ -28,11 +50,9 @@ export default function CheckinPage() {
 
     e.preventDefault();
 
-    if (!journal) {
+    if (!journal.trim()) {
 
-      alert(
-        "Isi jurnal dulu"
-      );
+      alert("Isi jurnal dulu");
 
       return;
     }
@@ -73,18 +93,16 @@ export default function CheckinPage() {
           "Gagal check-in"
         );
 
-        setLoading(false);
-
         return;
       }
 
-      // SAVE ID RESULT TERAKHIR
+      // SAVE LAST RESULT
       localStorage.setItem(
         "latestPredictionId",
         data.data.journal.id
       );
 
-      // REDIRECT DETAIL RESULT
+      // REDIRECT
       router.push(
         `/result/${data.data.journal.id}`
       );
@@ -93,9 +111,7 @@ export default function CheckinPage() {
 
       console.error(error);
 
-      alert(
-        "Server error"
-      );
+      alert("Server error");
 
     } finally {
 
@@ -103,7 +119,14 @@ export default function CheckinPage() {
     }
   };
 
-  const moods = [
+  // =========================
+  // DATA
+  // =========================
+
+  const moods: {
+    label: Mood;
+    emoji: string;
+  }[] = [
     {
       label: "sad",
       emoji: "😢",
@@ -126,7 +149,10 @@ export default function CheckinPage() {
     },
   ];
 
-  const workloadLevels = [
+  const workloadLevels: {
+    label: string;
+    value: Workload;
+  }[] = [
     {
       label: "Very Low",
       value: "very_low",
@@ -149,12 +175,17 @@ export default function CheckinPage() {
     },
   ];
 
+  // =========================
+  // UI
+  // =========================
+
   return (
 
     <div className="min-h-screen bg-[#0f0f14] text-white p-6">
 
       <div className="w-full max-w-4xl mx-auto space-y-6">
 
+        {/* TITLE */}
         <h1 className="text-3xl font-bold">
           Daily Check-in
         </h1>
@@ -227,7 +258,9 @@ export default function CheckinPage() {
                 key={item.value}
                 type="button"
                 onClick={() =>
-                  setWorkload(item.value)
+                  setWorkload(
+                    item.value
+                  )
                 }
                 className={`p-4 rounded-xl text-sm transition-all border font-medium ${
                   workload === item.value
@@ -294,7 +327,7 @@ export default function CheckinPage() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-4 rounded-2xl text-lg font-semibold hover:opacity-90 transition"
+          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-4 rounded-2xl text-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
         >
           {loading
             ? "Analyzing..."

@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import { useEffect, useState, } from "react";
 import TrendChart from "@/components/dashboard/TrendChart";
 
 interface CheckinItem {

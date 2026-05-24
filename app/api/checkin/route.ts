@@ -2,17 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromToken } from "@/lib/auth";
 import { checkinSchema } from "@/lib/validations/checkinSchema";
-
-import {
-  calculateBurnout,
-  generateInsight,
-} from "@/lib/services/checkinService";
-
-import {
-  success,
-  error,
-} from "@/lib/utils/apiResponse";
-
+import { calculateBurnout, generateInsight,} from "@/lib/services/checkinService";
+import { success, error, } from "@/lib/utils/apiResponse"; 
 import { logger } from "@/lib/logger";
 import { rateLimit } from "@/lib/rateLimiter";
 
@@ -21,7 +12,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUserFromToken(req);
+    const user =
+      await getUserFromToken(req);
 
     if (!user) {
       return NextResponse.json(
@@ -30,6 +22,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+  
     const journals =
       await prisma.journalEntry.findMany({
         where: {
@@ -68,12 +61,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
+
 export async function POST(req: NextRequest) {
   try {
-
-    // =========================
-    // GET IP
-    // =========================
 
     const ip =
       req.headers
@@ -81,54 +71,44 @@ export async function POST(req: NextRequest) {
         ?.split(",")[0]
         ?.trim() || "local";
 
-    // =========================
-    // RATE LIMIT
-    // =========================
-
     if (!rateLimit(ip)) {
+
       return NextResponse.json(
         error("Too many requests"),
         { status: 429 }
       );
     }
 
-    // =========================
-    // AUTH
-    // =========================
-
-    const user = await getUserFromToken(req);
+    const user =
+      await getUserFromToken(req);
 
     if (!user) {
+
       return NextResponse.json(
         error("Unauthorized"),
         { status: 401 }
       );
     }
 
-    // =========================
-    // PARSE BODY
-    // =========================
-
     let body;
 
     try {
+
       body = await req.json();
 
     } catch {
+
       return NextResponse.json(
         error("Invalid JSON"),
         { status: 400 }
       );
     }
 
-    // =========================
-    // VALIDATION
-    // =========================
-
     const parsed =
       checkinSchema.safeParse(body);
 
     if (!parsed.success) {
+
       return NextResponse.json(
         error(
           parsed.error.issues[0]?.message ||
@@ -138,10 +118,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // =========================
-    // EXTRACT DATA
-    // =========================
-
     const {
       journal: journalText,
       sleep,
@@ -149,15 +125,23 @@ export async function POST(req: NextRequest) {
       mood,
     } = parsed.data;
 
-    // =========================
-    // CHECK TODAY
-    // =========================
-
     const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+
+    todayStart.setHours(
+      0,
+      0,
+      0,
+      0
+    );
 
     const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+
+    todayEnd.setHours(
+      23,
+      59,
+      59,
+      999
+    );
 
     const already =
       await prisma.journalEntry.findFirst({
@@ -172,90 +156,180 @@ export async function POST(req: NextRequest) {
       });
 
     if (already) {
+
       return NextResponse.json(
         error("Kamu sudah check-in hari ini"),
         { status: 400 }
       );
     }
 
-    // =========================
-    // AI REQUEST
-    // =========================
+    // MODEL 1 - EMOTION DETECTION AI  
+    const emotionResponse =
+      await fetch(
+        "https://tenang-in-api-model1-production.up.railway.app/predict",
+        {
+          method: "POST",
 
-    const aiResponse = await fetch(
-      "https://tenang-in-api-model1-production.up.railway.app/predict",
-      {
-        method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          body: JSON.stringify({
+            text: journalText,
+          }),
+        }
+      );
 
-        body: JSON.stringify({
-          text: journalText,
-        }),
-      }
-    );
+    if (!emotionResponse.ok) {
 
-    if (!aiResponse.ok) {
       return NextResponse.json(
-        error("AI service error"),
+        error("Emotion AI error"),
         { status: 500 }
       );
     }
 
-    const aiData =
-      await aiResponse.json();
+    const emotionData =
+      await emotionResponse.json();
 
     const probabilities =
-      aiData.emotion.probabilities;
+      emotionData.emotion.probabilities;
 
     const emotionLabel =
-      aiData.emotion.label;
+      emotionData.emotion.label;
 
     const confidence =
-      aiData.emotion.confidence;
+      emotionData.emotion.confidence;
 
-    // =========================
-    // BURNOUT CALCULATION
-    // =========================
-
-    const { risk, score } =
-      calculateBurnout(
-        sleep,
-        workload,
-        mood,
-        probabilities.sadness ?? 0
-      );
+    const {
+      risk,
+      score,
+    } = calculateBurnout(
+      sleep,
+      workload,
+      mood,
+      probabilities.sadness ?? 0
+    );
 
     const insight =
       generateInsight(risk);
 
-    // =========================
-    // SAVE DATABASE
-    // =========================
+    // MODEL 2 - BURNOUT AI
+    const burnoutResponse =
+      await fetch(
+        "https://tenangin-production.up.railway.app/predict",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+
+            text: journalText,
+
+            Jam_Tidur_Semalam:
+              sleep,
+
+            Seberapa_Sibuk_Anda_Hari_Ini:
+              workload === "very_low"
+                ? 1
+                : workload === "low"
+                ? 2
+                : workload === "medium"
+                ? 3
+                : workload === "high"
+                ? 4
+                : 5,
+
+            Suasana_Hati_Anda:
+              mood === "sad"
+                ? 1
+                : mood === "bad"
+                ? 2
+                : mood === "neutral"
+                ? 3
+                : mood === "good"
+                ? 4
+                : 5,
+
+            prob_anger:
+              probabilities.anger ?? 0,
+
+            prob_fear:
+              probabilities.fear ?? 0,
+
+            prob_sadness:
+              probabilities.sadness ?? 0,
+
+            prob_joy:
+              probabilities.joy ?? 0,
+
+            prob_disgust:
+              probabilities.disgust ?? 0,
+
+            prob_trust:
+              probabilities.trust ?? 0,
+
+            prob_anticipation:
+              probabilities.anticipation ?? 0,
+          }),
+        }
+      );
+
+    if (!burnoutResponse.ok) {
+
+      const burnoutError =
+        await burnoutResponse.text();
+
+      logger.error("BURNOUT AI ERROR", {
+        error: burnoutError,
+      });
+
+      return NextResponse.json(
+        error("Burnout AI error"),
+        { status: 500 }
+      );
+    }
+
+    const burnoutText = await burnoutResponse.text();
+    let burnoutData;
+    try {
+      burnoutData = JSON.parse(burnoutText);
+    } catch {
+      logger.error("AI return non-JSON:", burnoutText);
+      return NextResponse.json(error("AI server error"), { status: 502 });
+    }
 
     const result =
       await prisma.$transaction(
-        async (tx: any) => {
+        async (tx) => {
 
-          // CREATE JOURNAL
           const createdJournal =
             await tx.journalEntry.create({
               data: {
                 userId: user.id,
+
                 tanggal: new Date(),
-                teksJurnal: journalText,
-                jamTidur: sleep,
-                bebanKerja: String(workload),
-                mood: String(mood),
+
+                teksJurnal:
+                  journalText,
+
+                jamTidur:
+                  sleep,
+
+                bebanKerja:
+                  String(workload),
+
+                mood:
+                  String(mood),
               },
             });
 
-          // CREATE PREDICTION
           const createdPrediction =
             await tx.prediction.create({
               data: {
+
                 userId: user.id,
 
                 journalId:
@@ -291,9 +365,12 @@ export async function POST(req: NextRequest) {
             });
 
           return {
-            journal: createdJournal,
+
+            journal:
+              createdJournal,
 
             prediction: {
+
               ...createdPrediction,
 
               insight,
@@ -302,23 +379,19 @@ export async function POST(req: NextRequest) {
                 emotionLabel,
 
               confidence,
+
+              burnoutAI:
+                burnoutData,
             },
           };
         }
       );
 
-    // =========================
-    // LOG
-    // =========================
 
     logger.info("CHECKIN CREATED", {
       userId: user.id,
       ip,
     });
-
-    // =========================
-    // RESPONSE
-    // =========================
 
     return NextResponse.json(
       success(

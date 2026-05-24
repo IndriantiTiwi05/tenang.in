@@ -1,124 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
+import { success, error } from "@/lib/utils/apiResponse";
+import { logger } from "@/lib/logger";
+import { registerSchema } from "@/lib/validations/registerSchema";
 
 export async function POST(req: NextRequest) {
   try {
-
     const body = await req.json();
+    const parsed = registerSchema.safeParse(body);
 
-    let { nama, email, password } = body;
-
-    if (!nama || !email || !password) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "Semua field wajib diisi",
-          data: null,
-        },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return NextResponse.json(error(parsed.error.issues[0]?.message || "Input tidak valid"), { status: 400 });
     }
 
-    nama = nama.trim();
-    email = email.trim().toLowerCase();
-    password = password.trim();
+    const { nama, email, password } = parsed.data;
 
-    if (nama.length < 3) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "Nama minimal 3 karakter",
-          data: null,
-        },
-        { status: 400 }
-      );
-    }
-
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "Format email tidak valid",
-          data: null,
-        },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message:
-            "Password minimal 6 karakter",
-          data: null,
-        },
-        { status: 400 }
-      );
-    }
-
-    const existingUser =
-      await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
-
+    // Cek duplikasi email
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message:
-            "Email sudah digunakan",
-          data: null,
-        },
-        { status: 400 }
-      );
+      return NextResponse.json(error("Email sudah digunakan"), { status: 400 });
     }
 
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
+    // Hash & Create
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { nama, email, password: hashedPassword },
+      select: { id: true, nama: true, email: true, createdAt: true }
+    });
 
-    const user =
-      await prisma.user.create({
-        data: {
-          nama,
-          email,
-          password: hashedPassword,
-        },
-      });
+    return NextResponse.json(success(user, "Register berhasil"), { status: 201 });
 
-    return NextResponse.json(
-      {
-        status: "success",
-        message: "Register berhasil",
-        data: {
-          id: user.id,
-          nama: user.nama,
-          email: user.email,
-          createdAt: user.createdAt,
-        },
-      },
-      { status: 201 }
-    );
-
-  } catch (error) {
-    console.error(
-      "REGISTER ERROR:",
-      error
-    );
-
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "Server error",
-        data: null,
-      },
-      { status: 500 }
-    );
+  } catch (err) {
+    logger.error("REGISTER ERROR", { error: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json(error("Server error"), { status: 500 });
   }
 }

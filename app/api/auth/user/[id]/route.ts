@@ -1,77 +1,36 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { success, error } from "@/lib/utils/apiResponse"; // Konsisten
+import { logger } from "@/lib/logger"; // Konsisten
 
 export async function GET(
   req: Request,
-  {
-    params,
-  }: {
-    params: Promise<{
-      id: string;
-    }>;
-  }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-
-    // WAJIB AWAIT
-    const { id } =
-      await params;
+    const { id } = await params;
 
     if (!id) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message: "ID wajib diisi",
-        },
-        { status: 400 }
-      );
+      return NextResponse.json(error("ID wajib diisi"), { status: 400 });
     }
 
-    const user =
-      await prisma.user.findUnique({
-        where: {
-          id,
-        },
-
-        select: {
-          id: true,
-          nama: true,
-          email: true,
-        },
-      });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nama: true,
+        email: true,
+      },
+    });
 
     if (!user) {
-      return NextResponse.json(
-        {
-          status: "error",
-          message:
-            "User tidak ditemukan",
-        },
-        { status: 404 }
-      );
+      return NextResponse.json(error("User tidak ditemukan"), { status: 404 });
     }
 
-    return NextResponse.json(
-      {
-        status: "success",
-        data: user,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json(success(user, "User berhasil diambil"));
 
   } catch (err) {
-
-    console.error(
-      "GET USER ERROR",
-      err
-    );
-
-    return NextResponse.json(
-      {
-        status: "error",
-        message: "Server error",
-      },
-      { status: 500 }
-    );
+    logger.error("GET USER ERROR", { error: err instanceof Error ? err.message : String(err) });
+    return NextResponse.json(error("Server error"), { status: 500 });
   }
 }
