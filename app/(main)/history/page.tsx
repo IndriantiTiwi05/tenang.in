@@ -19,6 +19,7 @@ interface CheckinItem {
 
 export default function HistoryPage() {
   const [data, setData] = useState<CheckinItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<CheckinItem | null>(null);
 
   useEffect(() => {
@@ -26,10 +27,11 @@ export default function HistoryPage() {
       try {
         const res = await fetch("/api/checkin");
         const result = await res.json();
-        if (!res.ok || !result.data) return;
-        setData(result.data);
+        if (res.ok && result.data) setData(result.data);
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false); // Penting: ini akan mematikan status loading
       }
     };
     fetchHistory();
@@ -105,6 +107,17 @@ export default function HistoryPage() {
     if (risk === "medium") return "bg-yellow-500";
     return "bg-green-500";
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-400">Sedang menyiapkan riwayat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

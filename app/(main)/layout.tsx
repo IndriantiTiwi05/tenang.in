@@ -13,7 +13,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (
       <Link
         href={href}
-        onClick={() => setIsOpen(false)} // Sidebar tutup otomatis kalau menu diklik
+        prefetch={true} // <--- Tambahkan ini di sini
+        onClick={() => setIsOpen(false)}
         className={`block px-4 py-3 rounded-xl transition font-medium ${
           isActive
             ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
