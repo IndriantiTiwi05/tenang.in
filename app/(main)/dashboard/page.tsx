@@ -34,19 +34,31 @@ export default function Dashboard() {
   const [streak, setStreak] = useState(0);
   const [trendText, setTrendText] = useState("");
 
-  // FETCH USER & CHECKIN (Logika tetap sama)
+  // =========================
+  // FETCH USER
+  // =========================
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await fetch("/api/auth/user");
         const result = await res.json();
-        if (!res.ok) { router.push("/login"); return; }
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
         setUser(result.data);
-      } catch (error) { console.error(error); } finally { setLoading(false); }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchUser();
   }, [router]);
 
+  // =========================
+  // FETCH CHECKIN
+  // =========================
   useEffect(() => {
     const fetchCheckin = async () => {
       try {
@@ -61,7 +73,10 @@ export default function Dashboard() {
           return;
         }
 
-        const sorted = [...checkins].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const sorted = [...checkins].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
         const scores = sorted.map((item) => item.prediction?.skorBurnout || 0);
         const averageScore = scores.reduce((acc, score) => acc + score, 0) / scores.length;
         const burnoutPercent = Math.round(averageScore * 100);
@@ -77,50 +92,67 @@ export default function Dashboard() {
           const latest3 = sorted.slice(0, 3);
           const first = Math.round((latest3[2].prediction?.skorBurnout || 0) * 100);
           const lastScore = Math.round((latest3[0].prediction?.skorBurnout || 0) * 100);
+
           if (lastScore > first) setTrendText("Burnout meningkat dalam 3 hari terakhir");
           else if (lastScore < first) setTrendText("Burnout menurun dalam 3 hari terakhir");
           else setTrendText("Burnout stabil dalam 3 hari terakhir");
         } else {
           setTrendText("Lanjutkan check-in untuk melihat tren");
         }
-      } catch (error) { console.error(error); }
+      } catch (error) {
+        console.error(error);
+      }
     };
     fetchCheckin();
   }, []);
 
+  // =========================
+  // LOGOUT
+  // =========================
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       router.push("/login");
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
-    <div className="w-full">
-      {/* HEADER - Responsif */}
+    <div className="p-4 md:p-6">
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-bold">Dashboard</h2>
           <p className="text-gray-400 text-sm">Ringkasan kesehatan mentalmu hari ini</p>
         </div>
 
+        {/* USER */}
         <div className="flex items-center gap-4 w-full md:w-auto">
-          <Link href="/profile" className="flex-1 md:flex-none flex items-center gap-4 bg-[#1f1f27] px-4 py-2 rounded-2xl border border-gray-800 hover:border-purple-500 transition">
-            <div className="text-right flex-1">
-              <p className="text-sm font-semibold text-white">{loading ? "Loading..." : user?.nama || "User"}</p>
-              <p className="text-xs text-gray-400 truncate">{user?.email || ""}</p>
+          <Link
+            href="/profile"
+            className="flex items-center gap-4 bg-[#1f1f27] px-4 py-2 rounded-2xl border border-gray-800 hover:border-purple-500 hover:scale-[1.02] transition flex-1 md:flex-none justify-end"
+          >
+            <div className="text-right">
+              <p className="text-sm font-semibold text-white">
+                {loading ? "Loading..." : user?.nama || "User"}
+              </p>
+              <p className="text-xs text-gray-400">{user?.email || ""}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-white shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-white">
               {user?.nama?.charAt(0) || "U"}
             </div>
           </Link>
-          <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl text-sm transition">
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl text-sm transition"
+          >
             Logout
           </button>
         </div>
       </div>
 
-      {/* TOP SECTION - Grid Responsif */}
+      {/* TOP - RESPONSIF */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="md:col-span-2">
           <BurnoutCard score={latest.score} risk={latest.risk} trend={trendText} />
@@ -128,7 +160,7 @@ export default function Dashboard() {
         <StreakCard streak={streak} />
       </div>
 
-      {/* CHART SECTION - Grid Responsif */}
+      {/* CHART - RESPONSIF */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="md:col-span-2">
           <TrendChart />
@@ -137,7 +169,10 @@ export default function Dashboard() {
       </div>
 
       {/* BUTTON */}
-      <Link href="/checkin" className="block text-center bg-gradient-to-r from-purple-600 to-purple-800 p-5 rounded-2xl hover:opacity-90 transition font-bold shadow-lg">
+      <Link
+        href="/checkin"
+        className="block text-center bg-gradient-to-r from-purple-600 to-purple-800 p-5 rounded-2xl hover:opacity-90 transition font-bold"
+      >
         + Start Daily Check-in
       </Link>
     </div>
