@@ -158,7 +158,7 @@ export async function PUT(
 
     const emotionResponse =
       await fetch(
-        "https://tenang-in-api-model1-production.up.railway.app/predict",
+        "https://tenang-in-model1-api-production.up.railway.app/predict",
         {
           method: "POST",
 
