@@ -208,7 +208,7 @@ export async function PUT(
 
     const burnoutResponse =
       await fetch(
-        "https://tenangin-production.up.railway.app/predict",
+        "https://web-production-06970.up.railway.app/predict",
         {
           method: "POST",
 
