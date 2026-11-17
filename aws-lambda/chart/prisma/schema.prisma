@@ -1,0 +1,85 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model User {
+  id            String           @id @default(uuid())
+  email         String           @unique
+  password      String
+  nama          String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  journals      JournalEntry[]
+  predictions   Prediction[]
+  sessions      Session[]
+
+  @@index([email])
+}
+
+model JournalEntry {
+  id            String        @id @default(uuid())
+
+  userId        String
+  tanggal       DateTime
+  teksJurnal    String
+  jamTidur      Float
+  bebanKerja    String
+  mood          String
+
+  createdAt     DateTime      @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  prediction    Prediction?
+
+  @@index([userId])
+  @@index([tanggal])
+}
+
+model Prediction {
+  id                  String         @id @default(uuid())
+
+  userId              String
+  journalId           String         @unique
+
+  probAnger           Float
+  probFear            Float
+  probSadness         Float
+  probJoy             Float
+  probDisgust         Float
+  probTrust           Float
+  probAnticipation    Float
+
+  skorBurnout         Float
+  labelRisk           String
+
+  createdAt           DateTime       @default(now())
+
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  journal             JournalEntry   @relation(fields: [journalId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([journalId])
+}

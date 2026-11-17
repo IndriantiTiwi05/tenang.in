@@ -26,3 +26,22 @@ next-env.d.ts
 # vercel
 .vercel
 /lib/generated/prisma
+
+# AWS Lambda deployment
+**/node_modules/
+**/.env
+**/deployment/
+**/*.zip
+
+# Local test environment
+**/test-db.js
+**/test-handler.js
+# AWS Lambda deployment
+**/node_modules/
+**/.env
+**/deployment/
+**/*.zip
+
+# Local test environment
+**/test-db.js
+**/test-handler.js

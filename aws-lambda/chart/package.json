@@ -1,0 +1,17 @@
+
+{
+  "name": "tenangin-chart-lambda",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "jsonwebtoken": "9.0.3"
+  },
+  "devDependencies": {
+    "prisma": "5.22.0"
+  }
+}
